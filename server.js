@@ -5,7 +5,7 @@ const util = require('util');
 const uniqid = require('uniqid');
 const PORT = process.env.PORT || 3001;
 const noteData = require('./db/db.json')
-// const { allowedNodeEnvironmentFlags } = require('process');
+
 
 const app = express();
 
@@ -17,24 +17,23 @@ app.use(express.json());
 
 //app.get('/', (req, res) => res.send('Navigate to the public folder'))
 
-app.get('/notes', (req, res) =>
-    res.sendFile(path.join(__dirname, 'public/notes.html'))
-);
+app.get('/notes', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public/notes.html'));
+
+
+});
 
 app.get('/api/notes', (req, res) => {
-    //res.readFile(path.join(__dirname, 'db/db.json'))
-    //res.json(noteData);
-    //console.log(noteData);
+
+    console.log(noteData);
     res.json(noteData);
 });
 
 
 
 app.post('/api/notes', (req, res) => {
-    console.log('in the post route');
-    console.log('in the else of ReadandAppend');
     var newNote = req.body;
-    console.log('this is before the id', newNote);
+    //setting the id for the added note.
     newNote.id = uniqid();
     console.log('this is after the id is added', newNote);
     noteData.push(newNote);
@@ -43,25 +42,20 @@ app.post('/api/notes', (req, res) => {
     })
 });
 
-app.delete('api/notes/:id', (req, res) => {
-    // Fetched id to delete
-    let noteId = req.params.id.toString();
+app.delete('/api/notes/:id', (req, res) => {
 
-    console.log(`\n\nDELETE note request for noteId: ${noteId}`);
 
-    // Read data from 'db.json' file
+    const id = req.params.id;
     let data = JSON.parse(fs.readFileSync("./db/db.json", "utf8"));
+    console.info(`${req.method} request for note for id: ${id}`);
+    const removeId = data.filter((elem) => elem.id !== id)
 
-    // filter data to get notes except the one to delete
-    const newData = data.filter(note => note.id.toString() !== noteId);
 
-    // Write new data to 'db.json' file
-    fs.writeFileSync('./db/db.json', JSON.stringify(newData));
+    fs.writeFile('./db/db.json', JSON.stringify(removeId, null, 4), (err) =>
+        err ? console.error(err) : console.info(`\nData written `)
+    );
 
-    console.log(`\nSuccessfully deleted note with id : ${noteId}`);
-
-    // Send response
-    res.json(newData);
+    res.json(removeId);
 });
 
 
